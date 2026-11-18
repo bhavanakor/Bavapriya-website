@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { useCart } from "@/componenets/CartProvider";
+import ThemeToggle from "@/componenets/ThemeToggle";
 
 const navItems = [
   { label: "Home", href: "/#home", id: "home" },
@@ -116,7 +117,8 @@ const Navbar = () => {
           ))}
         </div>
 
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <ThemeToggle />
           <Link href="/cart" className="relative p-2" aria-label={`Cart${count ? `, ${count} items` : ""}`}>
             <ShoppingCartIcon className="h-6 w-6" />
             {count > 0 && (

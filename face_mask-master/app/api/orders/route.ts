@@ -250,10 +250,12 @@ export async function POST(request: Request) {
 
         order: {
           id: order.id,
+          createdAt: order.createdAt,
           itemsTotal: order.itemsTotal,
           personName: shipping.fullName,
           phone: shipping.phone,
           email: customerEmail,
+          items: order.items,
           productsWanted: productsWanted,
           spreadsheetError,
         },

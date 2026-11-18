@@ -32,13 +32,13 @@ const Products = () => {
               className="group bg-white rounded-[28px] overflow-hidden border border-[#3A4F41]/10 shadow-[0_20px_50px_rgba(58,79,65,0.08)] cursor-pointer"
               onClick={() => router.push(`/product/${product.id}`)}
             >
-              <div className="relative h-[22rem] sm:h-[28rem] overflow-hidden bg-[#E8E3D6]">
+              <div className="relative h-[22rem] sm:h-[28rem] overflow-hidden bg-white">
                 <Image
                   src={product.image}
                   alt={product.name}
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                  className="scale-[0.88] object-contain transition-transform duration-700 group-hover:scale-[0.92]"
                 />
                 <div className="absolute top-5 left-5">
                   <span className="inline-block bg-[#3A4F41] text-white text-[11px] uppercase tracking-[0.2em] px-3 py-1.5 rounded-full">
@@ -71,9 +71,13 @@ const Products = () => {
                     >
                       Choose size
                     </button>
-                    {product.id === 1 && (
+                    {(product.id === 1 || product.id === 3) && (
                       <a
-                        href="https://amzn.in/d/01SJpMw0"
+                        href={
+                          product.id === 1
+                            ? "https://amzn.in/d/01SJpMw0"
+                            : "https://amzn.in/d/0dgz36CU"
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(event) => event.stopPropagation()}
