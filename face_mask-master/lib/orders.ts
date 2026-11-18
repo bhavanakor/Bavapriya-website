@@ -43,16 +43,24 @@ export async function getOrder(id: string) {
   return orders.find((order) => order.id === id) ?? null;
 }
 
-export async function createOrder(input: Omit<Order, "id" | "createdAt" | "updatedAt" | "status">) {
-  const orders = await readAll();
+export function createOrderRecord(
+  input: Omit<Order, "id" | "createdAt" | "updatedAt" | "status">
+): Order {
   const now = new Date().toISOString();
-  const order: Order = {
+  return {
     ...input,
     id: makeId(),
     status: "placed",
     createdAt: now,
     updatedAt: now,
   };
+}
+
+export async function createOrder(
+  input: Omit<Order, "id" | "createdAt" | "updatedAt" | "status">
+) {
+  const orders = await readAll();
+  const order = createOrderRecord(input);
   orders.push(order);
   await writeAll(orders);
   return order;

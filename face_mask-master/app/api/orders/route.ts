@@ -1,6 +1,6 @@
 
 import { NextResponse } from "next/server";
-import { createOrder } from "@/lib/orders";
+import { createOrder, createOrderRecord } from "@/lib/orders";
 import { products, sizeOptions } from "@/lib/products";
 import type { CartItem, ShippingAddress } from "@/lib/types";
 import { cartTotal } from "@/lib/types";
@@ -85,6 +85,14 @@ function normalizeShipping(raw: unknown): ShippingAddress {
   }
 
   return shipping;
+}
+
+function isReadOnlyFilesystemError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    "code" in error &&
+    (error.code === "EROFS" || error.code === "EACCES")
+  );
 }
 
 // ==========================================
@@ -205,7 +213,7 @@ export async function POST(request: Request) {
     const total = cartTotal(items);
 
     // Create order
-    const order = await createOrder({
+    const orderInput = {
       user: {
         id: customerEmail,
         name: shipping.fullName,
@@ -216,7 +224,24 @@ export async function POST(request: Request) {
       itemsTotal: total,
       notes,
       paymentMethod: "cod",
-    });
+    } satisfies Parameters<typeof createOrder>[0];
+
+    const isVercelDeployment =
+      process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV);
+    let order = createOrderRecord(orderInput);
+    let usedReadOnlyFilesystemFallback = isVercelDeployment;
+
+    if (!isVercelDeployment) {
+      try {
+        order = await createOrder(orderInput);
+      } catch (error) {
+        if (!isReadOnlyFilesystemError(error)) throw error;
+        usedReadOnlyFilesystemFallback = true;
+        console.warn(
+          "Order file storage is read-only; using the configured spreadsheet integration."
+        );
+      }
+    }
 
     let spreadsheetError: string | undefined;
     let productsWanted = items
@@ -241,6 +266,17 @@ export async function POST(request: Request) {
           ? error.message
           : "Could not save this order to the Orders spreadsheet.";
       console.error("Order spreadsheet submission failed:", error);
+    }
+
+    if (usedReadOnlyFilesystemFallback && spreadsheetError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "The order could not be saved to the online order system. Please try again later or contact us directly.",
+        },
+        { status: 503 }
+      );
     }
 
     // Prepare response for WhatsApp integration
